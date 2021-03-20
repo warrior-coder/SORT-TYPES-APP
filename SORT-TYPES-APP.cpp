@@ -11,7 +11,6 @@ void CreateArray();
 void PrintArray();
 int IntLen(int);
 void SortMenu();
-void PushSortHistory(int, int, double);
 void ClearArray();
 void ShowHistory();
 void Settings();
@@ -21,25 +20,29 @@ void sort_cocktail();
 void sort_selection();
 void sort_insertion();
 void sort_shell();
+
 void sort_merge(int, int);
 void merge(int, int, int);
+
 void sort_quick_recursion(int, int);
-struct St { int L; int R; } stack[10];
+struct { int L; int R; } stack[100];
 void push(int, int, int&);
 void pop(int&, int&, int&);
 void swap(int&, int&);
 void sort_quick();
 void sort_quick_compressed();
 
-int RANDOM_KEY = 0, RANDOM_MIN = -100, RANDOM_MAX = 100;
+int RANDOM_KEY, RANDOM_MIN, RANDOM_MAX;
 int n = 0, nh = 0;
-int* arr = nullptr;
+int* arr = nullptr, *arrTmp;
+
 struct SortInfo
 {
 	int size;
 	char type[20];
 	double time;
 } hist[30];
+
 FILE* fl;
 
 int main()
@@ -52,6 +55,9 @@ int main()
 	{
 		fopen_s(&fl, "settings.dat", "w");
 		
+		RANDOM_KEY = 0;
+		RANDOM_MIN = -100;
+		RANDOM_MAX = 100;
 		fwrite(&RANDOM_KEY, sizeof(int), 1, fl);
 		fwrite(&RANDOM_MIN, sizeof(int), 1, fl);
 		fwrite(&RANDOM_MAX, sizeof(int), 1, fl);
@@ -61,7 +67,6 @@ int main()
 	}
 	else
 	{
-
 		fread(&RANDOM_KEY, sizeof(int), 1, fl);
 		fread(&RANDOM_MIN, sizeof(int), 1, fl);
 		fread(&RANDOM_MAX, sizeof(int), 1, fl);
@@ -91,8 +96,6 @@ int main()
 
 int Menu()
 {
-	int k;
-
 	cout << "+--------------------+" << endl;
 	cout << "| 1 - Create array   |" << endl;
 	cout << "| 2 - Print array    |" << endl;
@@ -103,8 +106,9 @@ int Menu()
 	cout << "| 7 - Exit           |" << endl;
 	cout << "+--------------------+" << endl;
 
-	cin >> k;
+	int k; cin >> k;
 	cout << endl;
+
 	return k;
 }
 
@@ -128,7 +132,7 @@ void CreateArray()
 		for (int i = 0; i < n; i++)
 			arr[i] = rand() % (RANDOM_MAX - RANDOM_MIN + 1) + RANDOM_MIN;
 
-		cout << "[" << n << "] created." << endl;
+		cout << '[' << n << "] created." << endl;
 	}
 	else
 	{
@@ -164,11 +168,11 @@ void SortMenu()
 		cout << " 2 - Cocktail sort" << endl;
 		cout << " 3 - Selection sort" << endl;
 		cout << " 4 - Insertion sort" << endl;
-		//cout << " 5 - Shell sort" << endl;
-		//cout << " 6 - Merge sort" << endl;
-		//cout << " 7 - Quick recursion sort" << endl;
-		//cout << " 8 - Quick sort" << endl;
-		//cout << " 9 - Quick compressed sort" << endl;
+		cout << " 5 - Shell sort" << endl;
+		cout << " 6 - Merge sort" << endl;
+		cout << " 7 - Quick sort recursion" << endl;
+		cout << " 8 - Quick sort" << endl;
+		cout << " 9 - Quick sort compressed" << endl;
 		cout << "+-------------------------+" << endl;
 
 		int k; cin >> k;
@@ -180,11 +184,11 @@ void SortMenu()
 			case 2: sort_cocktail(); break;
 			case 3: sort_selection(); break;
 			case 4: sort_insertion(); break;
-			//case 5: sort_shell(); break;
-			//case 6: sort_merge(); break;
-			//case 7: sort_quick_recursion(); break;
-			//case 8: sort_quick(); break;
-			//case 9: sort_quick_compressed(); break;
+			case 5: sort_shell(); break;
+			case 6: arrTmp = new int[n]; sort_merge(0, n-1); delete[] arrTmp; arrTmp = nullptr; break;
+			case 7: sort_quick_recursion(0, n-1); break;
+			case 8: sort_quick(); break;
+			case 9: sort_quick_compressed(); break;
 			default: cout << "SORT NOT DEFINED" << endl; return;
 		}
 		auto t2 = std::chrono::high_resolution_clock::now();
@@ -193,16 +197,21 @@ void SortMenu()
 		hist[nh].size = n;
 		switch (k)
 		{
-			case 1: strcpy_s(hist[nh].type, "Bubble"); break;
-			case 2: strcpy_s(hist[nh].type, "Cocktail"); break;
-			case 3: strcpy_s(hist[nh].type, "Selection"); break;
-			case 4: strcpy_s(hist[nh].type, "Insertion"); break;
-			default: strcpy_s(hist[nh].type, "???"); break;
+			case 1: strcpy_s(hist[nh].type, " Bubble: "); break;
+			case 2: strcpy_s(hist[nh].type, "Cocktail: "); break;
+			case 3: strcpy_s(hist[nh].type, "Selection:"); break;
+			case 4: strcpy_s(hist[nh].type, "Insertion:"); break;
+			case 5: strcpy_s(hist[nh].type, "  Shell:  "); break;
+			case 6: strcpy_s(hist[nh].type, "  Merge:  "); break;
+			case 7: strcpy_s(hist[nh].type, "Quick (R):"); break;
+			case 8: strcpy_s(hist[nh].type, "  Quick:  "); break;
+			case 9: strcpy_s(hist[nh].type, "Quick (C):"); break;
+			default:strcpy_s(hist[nh].type, "   ???:   "); break;
 		}
 		hist[nh].time = dt / 1000000;
 		
 		cout << "Sorted." << endl;
-		cout << "[" << hist[nh].size << "] " << hist[nh].type << ": " << hist[nh].time << "s" << endl;
+		cout << '[' << hist[nh].size << ']' << hist[nh].type << hist[nh].time << 's' << endl;
 		nh++;
 	}
 	else
@@ -243,7 +252,7 @@ void ShowHistory()
 	{
 		cout << "History:" << endl;
 		for (int i = 0; i < nh; i++)
-			cout << "[" << hist[i].size << "] " << hist[i].type << " " << hist[i].time << "s" << endl;
+			cout << '[' << hist[i].size << ']' << hist[i].type << hist[i].time << 's' << endl;
 	}
 	else
 	{
@@ -352,6 +361,7 @@ void sort_selection()
 	}
 }
 
+//-+-+-+-+-+-+-+-+-+-+-INSERTION SORT-+-+-+-+-+-+-+-+-+-+-
 void sort_insertion()
 {
 	int x, j;
@@ -364,4 +374,235 @@ void sort_insertion()
 			arr[j+1] = arr[j];
 		arr[j+1] = x;
 	}
+}
+
+//-+-+-+-+-+-+-+-+-+-+-SHELL SORT-+-+-+-+-+-+-+-+-+-+-
+void sort_shell()
+{
+	int x, j;
+
+	for (int d = 3; d > 0; d--)
+	{
+		for (int i = d; i < n; i++)
+		{
+			x = arr[i];
+
+			for (j = i-d; j >= 0 && arr[j] > x; j-=d)
+				arr[j+d] = arr[j];
+			arr[j+d] = x;
+		}
+	}
+}
+
+//-+-+-+-+-+-+-+-+-+-+-MERGE SORT-+-+-+-+-+-+-+-+-+-+-
+void sort_merge(int left, int right)
+{
+	if (left < right)
+	{
+		int middle = (left + right) / 2;
+		sort_merge(left, middle);
+		sort_merge(middle+1, right);
+		merge(left, middle, right);
+	}
+}
+
+void merge(int left, int middle, int right)
+{
+	int i = left, j = middle+1, k = 0;
+
+	while ((i <= middle) && (j <= right))
+	{
+		if (arr[i] < arr[j])
+		{
+			arrTmp[k] = arr[i];
+			k++;
+			i++;
+		}
+		else
+		{
+			arrTmp[k] = arr[j];
+			k++;
+			j++;
+		}
+	}
+
+	while (i <= middle)
+	{
+		arrTmp[k] = arr[i];
+		k++;
+		i++;
+	}
+	while (j <= right)
+	{
+		arrTmp[k] = arr[j];
+		k++;
+		j++;
+	}
+
+	k = 0;
+	while (left <= right)
+	{
+		arr[left] = arrTmp[k];
+		left++;
+		k++;
+	}
+}
+
+//-+-+-+-+-+-+-+-+-+-+-QUICK SORT RECURSION-+-+-+-+-+-+-+-+-+-+-
+void sort_quick_recursion(int left, int right)
+{
+	int i = left, j = right-1, x, temp;
+
+	x = arr[(i + j) / 2];
+	do
+	{
+		while (arr[i] < x && i < right) i++;
+		while (arr[j] > x && j > left) j--;
+		
+		if (i <= j)
+		{
+			temp = arr[i];
+			arr[i] = arr[j];
+			arr[j] = temp;
+			i++;
+			j--;
+		}
+	} while (i <= j);
+
+	if (left < j) sort_quick_recursion(left, j);
+	if (i < right) sort_quick_recursion(i, right);
+}
+
+//-+-+-+-+-+-+-+-+-+-+-QUICK SORT-+-+-+-+-+-+-+-+-+-+-
+void swap(int& a, int& b)
+{
+	int temp = a;
+	a = b;
+	b = temp;
+}
+
+void push(int L, int R, int& k)
+{
+	stack[k].L = L;
+	stack[k].R = R;
+	k++;
+}
+void pop(int& L, int& R, int& k)
+{
+	k--;
+	L = stack[k].L;
+	R = stack[k].R;
+}
+
+void sort_quick()
+{
+	int i, j, left, right, k = 0;
+	int x, temp;
+
+	push(0, n-1, k);
+
+	while (k != -1)
+	{
+		pop(left, right, k);
+
+		while (left < right)
+		{
+			i = left;
+			j = right;
+			x = arr[(i + j) / 2];
+
+			while (i <= j)
+			{
+				while (arr[i] < x) i++;
+				while (arr[j] > x) j--;
+
+				if (i <= j)
+				{
+					swap(arr[i], arr[j]);
+					i++;
+					j--;
+				}
+			}
+
+			if ( (j-left) < (right-i) )
+			{
+				if (i < right) push(i, right, k);
+				right = j;
+			}
+			else
+			{
+				if (left < j) push(left, j, k);
+				left = i;
+			}
+		}
+	}
+}
+
+//-+-+-+-+-+-+-+-+-+-+-QUICK SORT COMPRESSED-+-+-+-+-+-+-+-+-+-+-
+void sort_quick_compressed()
+{
+	struct
+	{
+		int L;
+		int R;
+		int k;
+	} stack[100];
+
+	int i, j, left, right, k;
+	int x, temp;
+
+	k = 0;
+	stack[k].L = 0;
+	stack[k].R = n-1;
+
+	while (k != -1)
+	{
+		left = stack[k].L;
+		right = stack[k].R;
+		k--;
+
+		while (left < right)
+		{
+			i = left;
+			j = right;
+			x = arr[(i + j) / 2];
+
+			while (i <= j)
+			{
+				while (arr[i] < x) i++;
+				while (arr[j] > x) j--;
+
+				if (i <= j)
+				{
+					temp = arr[i];
+					arr[i] = arr[j];
+					arr[j] = temp;
+					i++;
+					j--;
+				}
+			}
+
+			if ( (j-left) < (right-i) )
+			{
+				if (i < right)
+				{
+					k++;
+					stack[k].L = i;
+					stack[k].R = right;
+				}
+				right = j;
+			}
+			else
+			{
+				if (left < j)
+				{
+					k++;
+					stack[k].L = left;
+					stack[k].R = j;
+				}
+				left = i;
+			}
+		}
+	}
+
 }
