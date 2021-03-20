@@ -47,6 +47,8 @@ FILE* fl;
 
 int main()
 {
+	system("title SORT TYPES");
+	
 	cout.setf(ios_base::fixed);
 	cout.precision(6);
 
@@ -162,7 +164,7 @@ void PrintArray()
 
 void SortMenu()
 {
-	if (n > 0)
+	if (arr != nullptr)
 	{
 		cout << " 1 - Bubble sort" << endl;
 		cout << " 2 - Cocktail sort" << endl;
@@ -311,7 +313,7 @@ void sort_bubble()
 //-+-+-+-+-+-+-+-+-+-+-COCKTAIL SORT-+-+-+-+-+-+-+-+-+-+-
 void sort_cocktail()
 {
-	int k, left = 0, right = n;
+	int k = n, left = 0, right = n;
 	int temp;
 
 	do

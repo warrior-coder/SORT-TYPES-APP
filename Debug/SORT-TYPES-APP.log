@@ -1,0 +1,8 @@
+﻿  SORT-TYPES-APP.cpp
+D:\Coding\OAIP\0 lects\lect-11\SORT-TYPES-APP\SORT-TYPES-APP.cpp(197,13): warning C4244: инициализация: преобразование "_Rep" в "double", возможна потеря данных
+          with
+          [
+              _Rep=__int64
+          ]
+D:\Coding\OAIP\0 lects\lect-11\SORT-TYPES-APP\SORT-TYPES-APP.cpp(502,9): warning C4101: temp: неиспользованная локальная переменная
+  SORT-TYPES-APP.vcxproj -> D:\Coding\OAIP\0 lects\lect-11\Debug\SORT-TYPES-APP.exe
